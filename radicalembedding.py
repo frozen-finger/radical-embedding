@@ -5,6 +5,8 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from dataload import rdataset
 from model import radical2vec
+from PIL import Image
+import torchvision.transforms as transforms
 
 iopair = []
 with open("chindexpair.txt", encoding='utf-8') as f:
@@ -20,34 +22,34 @@ testdata = DataLoader(testdataset, batch_size=4, shuffle=True)
 model = radical2vec().cuda()
 optimizer = optim.Adam(model.parameters(), lr=0.0001)
 
-for epoch in range(50):
-    sum_loss = 0.0
-    for data in traindata:
-        x, y = data
-        x = x.cuda()
-        y = y.cuda()
-        pred, embed = model(x)
-        optimizer.zero_grad()
-        loss = F.cross_entropy(pred, y)
-        loss.backward()
-        optimizer.step()
-        sum_loss+=loss
-    with open("log1", 'a') as f:
-        f.write("{0},{1}".format(epoch, sum_loss)+"\n")
-    print("epoch{0}, loss {1}".format(epoch, sum_loss))
-
-torch.save(model.state_dict(), 'model_total.pth')
-
-# correct = 0
-# total = 0
-# with torch.no_grad():
-#     model.load_state_dict(torch.load('model.pth'))
-#     for data in testdata:
+# for epoch in range(50):
+#     sum_loss = 0.0
+#     for data in traindata:
 #         x, y = data
 #         x = x.cuda()
 #         y = y.cuda()
 #         pred, embed = model(x)
-#         pred = torch.argmax(pred, 1)
-#         correct += (pred==y).sum().item()
-#         total += pred.size(0)
-# print("correct/total:{}".format(correct/total))
+#         optimizer.zero_grad()
+#         loss = F.cross_entropy(pred, y)
+#         loss.backward()
+#         optimizer.step()
+#         sum_loss+=loss
+#     with open("log1", 'a') as f:
+#         f.write("{0},{1}".format(epoch, sum_loss)+"\n")
+#     print("epoch{0}, loss {1}".format(epoch, sum_loss))
+
+# torch.save(model.state_dict(), 'model_total.pth')
+
+correct = 0
+total = 0
+with torch.no_grad():
+    model.load_state_dict(torch.load('model_total.pth'))
+    for data in testdata:
+        x, y = data
+        x = x.cuda()
+        y = y.cuda()
+        pred, embed = model(x)
+        pred = torch.argmax(pred, 1)
+        correct += (pred==y).sum().item()
+        total += pred.size(0)
+print("correct/total:{}".format(correct/total))
